@@ -1,41 +1,108 @@
 # Kafka_Testing
 Kafka Practices including:  1. Kafka + Python + PostgreSQL streaming pipeline: reads CSV, streams to Kafka, stores in PostgreSQL (aggregated &amp; raw). 2. Real-time CDC pipeline using Kafka and Python: tracks PostgreSQL changes and syncs them to a target table via Kafka.
 
+# Kafka + PostgreSQL Streaming Pipeline Project
 
-🔧 Kafka-PostgreSQL Streaming Pipeline Project
-This project demonstrates a complete data streaming pipeline using Kafka, Python, and PostgreSQL.
+This project demonstrates a complete data streaming pipeline using **Kafka**, **Python**, and **PostgreSQL**, from ingestion to processing and storage. It was developed as part of a Data Engineering hands-on assignment.
 
-It reads salary data from a CSV file using a Kafka producer, streams it into a Kafka topic, then consumes the data using a Kafka consumer, and stores the aggregated or raw results into PostgreSQL tables.
+---
 
-📁 Project Structure
-producer.py: Reads and filters employee salary data from CSV, sends messages to Kafka topic.
+## 📦 Project Overview
+- **Input**: `Employee_Salaries.csv` - Raw salary data file
+- **Producer**: Filters and sends data to Kafka topic `employee_salaries`
+- **Consumer**: Reads from Kafka and writes to PostgreSQL:
+  - `department_employee_salary`: Aggregated total salary by department
+  - `employee_B`: Raw records with department and salary
 
-consumer.py: Listens to Kafka topic and inserts/aggregates data into PostgreSQL.
+---
 
-employee.py: Defines the Employee class and JSON serialization logic.
+## 🔧 Technologies Used
+- **Apache Kafka** (`confluentinc/cp-kafka` Docker image)
+- **Zookeeper** (`confluentinc/cp-zookeeper` Docker image)
+- **PostgreSQL** (`postgres:14-alpine` Docker image)
+- **Python 3.13** with `confluent-kafka`, `psycopg2`, `pandas`
+- **Docker Desktop** for container orchestration
+- **DBeaver** for PostgreSQL GUI
 
-docker-compose.yml: Sets up Kafka, Zookeeper, and PostgreSQL containers.
+---
 
-Employee_Salaries.csv: Raw data source for streaming.
+## 🗂️ Project Structure
+```text
+├── docker-compose.yml           # Kafka + Zookeeper + PostgreSQL setup
+├── producer.py                  # Reads CSV, filters, sends to Kafka
+├── consumer.py                  # Consumes Kafka messages and stores in Postgres
+├── employee.py                  # Defines Employee class with serialization
+├── Employee_Salaries.csv        # Input CSV file
+├── requirements.txt             # Python dependencies
+```
 
-requirements.txt: Python dependencies.
+---
 
-🚀 Technologies Used
-Apache Kafka (via confluent-kafka)
+## 🚀 How It Works
+### 🔁 Producer Workflow (`producer.py`)
+1. Reads and filters CSV rows:
+   - Keeps only `ECC`, `CIT`, `EMS` departments
+   - Filters out employees hired before 2010
+   - Rounds down salary to integer
+2. Sends messages to Kafka topic `employee_salaries`
 
-PostgreSQL
+### 🧾 Consumer Workflow (`consumer.py`)
+1. Reads messages from topic `employee_salaries`
+2. Parses employee JSON records
+3. Updates PostgreSQL:
+   - Inserts or updates `department_employee_salary` (sum of salaries per dept)
+   - Appends raw data to `employee_B`
 
-Python 3.11+
+---
 
-Docker & Docker Compose
+## 🐳 Running the Project (Quick Guide)
 
-DBeaver (for PostgreSQL GUI inspection)
+### 1. Start Docker Containers
+```bash
+docker-compose up -d
+```
 
-✅ Features
-Real-time streaming from CSV to Kafka to PostgreSQL
+### 2. Run Producer
+```bash
+python producer.py
+```
 
-Data filtering and transformation (e.g., rounding down salaries, filtering by department/year)
+### 3. Run Consumer
+```bash
+python consumer.py
+```
 
-Aggregated salary totals per department
+### 4. View Results in PostgreSQL (via DBeaver)
+- Host: `localhost`
+- Port: `5432`
+- Database: `postgres`
+- User: `postgres`
+- Password: `postgres`
+- Tables:
+  - `department_employee_salary`
+  - `employee_B`
 
-Dual table storage: department_employee_salary (aggregated), employee_B (raw)
+---
+
+## 🧪 Sample Output
+Example query:
+```sql
+SELECT * FROM department_employee_salary;
+```
+| department | total_salary |
+|------------|--------------|
+| ECC        | 4281332      |
+| CIT        | 13869807     |
+| EMS        | 6127454      |
+
+---
+
+## ✍️ Author
+- Diwen Liu (Project by BeaconFire Training)
+
+---
+
+## 📄 License
+MIT License - feel free to reuse and adapt!
+
+
