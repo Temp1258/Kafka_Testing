@@ -1,0 +1,131 @@
+🔹Step 1: 启动容器环境
+📌 目的：启动 Kafka、Zookeeper、PostgreSQL 源库和目标库。
+
+1️⃣ 打开 Docker Desktop 并等待服务完全启动
+2️⃣ 在 PowerShell 进入 Project 2 目录：
+cd D:\BeaconFire\DE_February\Training\W6D3\KafkaProjects\BFS_DE_Kafka-main\proj2
+
+3️⃣ 启动容器：
+docker-compose up -d
+
+4️⃣ 检查容器状态：
+docker ps
+✅ 预期输出：看到容器 kafka_proj2_db_source、kafka_proj2_db_dst、kafka_setup-kafka-1、kafka_setup-zookeeper-1 正在运行。
+🟩 【更改点】：容器名和 db 容器不再是 kafka_setup-db-1，而是你自己命名的 kafka_proj2_db_source 和 kafka_proj2_db_dst
+
+--------------------------------------------------------------------
+
+接DBeaver操作：
+🟦 Step 1: 打开 DBeaver，连接 PostgreSQL
+🔹 连接 Source 数据库（db_source）
+打开 DBeaver
+
+
+选择 PostgreSQL
+
+配置信息：
+Host: 0.0.0.0
+Port: 5433 ✅（这是 db_source 的端口）
+Database: postgres
+User: postgres
+Password: postgres
+点击“测试连接” → 确认无误后 → 点击“完成”
+
+
+
+🟦 Step 2: 执行你保存的 SQL 脚本（在 db_source 中）
+📍 对象：连接 db_source 的 PostgreSQL（5433）
+在左边展开连接 → postgres2 (5433) → 右键 → SQL 编辑器 → 新建 SQL 脚本
+粘贴保存的 DBeaver.sql 内容
+
+--------------------------------------------------------------------
+
+🔹Step 2: 检查 PostgreSQL 源库结构
+📌 目的：验证 employees、emp_cdc 表结构正确并导入数据
+
+进入 db_source 容器：
+docker exec -it kafka_proj2_db_source psql -U postgres
+连接数据库：
+\c postgres;
+
+确认表存在：
+SELECT * FROM employees;
+SELECT * FROM emp_cdc;
+
+
+--------------------------------------------------------------------
+
+🔹Step 3: 验证触发器逻辑是否正常
+📌 目的：验证对 employees 表进行变更时是否同步记录到 emp_cdc 表。
+
+执行以下 SQL：
+INSERT INTO employees (first_name, last_name, dob, city) 
+VALUES ('John', 'Doe', '1990-01-01', 'New York');
+
+UPDATE employees SET city = 'San Francisco' WHERE first_name = 'John';
+
+DELETE FROM employees WHERE first_name = 'John';
+
+
+然后执行：
+SELECT * FROM emp_cdc;
+✅ 预期输出：能看到刚刚 John 的 3 条变更记录（INSERT, UPDATE, DELETE）。
+
+
+
+--------------------------------------------------------------------
+
+🔹Step 4: 启动 Kafka Producer
+📌 目的：Producer 从 emp_cdc 表中拉取变更数据并发送至 Kafka Topic。
+
+在 PowerShell 运行：
+python producer.py
+✅ 预期输出：无错误，数据发送成功。
+
+
+--------------------------------------------------------------------
+
+🔹Step 5: 验证 Kafka 中是否收到数据
+📌 目的：查看 bf_employee_cdc Topic 中是否有变更数据。
+
+进入 Kafka 容器：
+docker exec -it kafka_setup-kafka-1 bash
+运行 Kafka Consumer CLI：
+/usr/local/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:29092 --topic bf_employee_cdc --from-beginning
+✅ 预期输出：你应该能看到 JSON 格式的 Kafka 消息，包括 action 字段（如 INSERT、UPDATE、DELETE）
+
+退出容器：
+exit 或者ctrl + c
+
+--------------------------------------------------------------------
+
+🔹Step 6: 启动 Kafka Consumer 并写入目标库
+📌 目的：Kafka Consumer 监听 Topic，并根据 action 写入 employees_B
+
+在 PowerShell 运行：
+python consumer.py
+✅ 预期输出：无报错，数据成功写入目标数据库。
+
+--------------------------------------------------------------------
+
+
+🔹Step 7: 查看目标库是否同步成功
+📌 目的：验证 employees_B 表是否收到 Kafka 中的变更数据。
+
+进入目标库容器：
+docker exec -it kafka_proj2_db_dst psql -U postgres
+执行查询：
+\c postgres;
+SELECT * FROM employees_B;
+✅ 预期输出：你应该能看到与 emp_cdc 中数据对应的员工记录。
+
+--------------------------------------------------------------------
+
+🔹Step 8: 停止所有容器（可选）
+📌 完成演示后清理环境：
+
+docker-compose down
+
+
+
+

@@ -1,0 +1,85 @@
+Project 1 Presentation Flow：
+---------------------------------------------------------------------------
+
+启动 Docker 并检查容器
+
+打开 Docker Desktop 并等待 Docker 完全启动
+PowerShell进入proj1 目录：
+cd D:\Beaconfire\DE_february\training\w6d3\kafkaprojects\BFS_DE_Kafka-main\proj1
+运行 Docker 容器（目的： 启动 Kafka、Zookeeper、PostgreSQL）：
+docker-compose up -d
+检查容器是否正确启动
+docker ps
+预期输出： 看到 kafka_setup-kafka-1、kafka_setup-zookeeper-1、kafka_setup-db-1 都在运行
+
+
+
+---------------------------------------------------------------------------
+
+运行 Kafka Producer
+
+python producer.py
+读取 Employee_Salaries.csv 并发送数据到 Kafka
+预期输出： 终端无错误，说明数据已成功进入 Kafka
+
+---------------------------------------------------------------------------
+
+验证 Kafka 是否收到数据
+
+进入 Kafka 容器(在 PowerShell 运行):
+docker exec -it kafka_setup-kafka-1 bash
+目的： 进入 Kafka 服务器的 shell 环境
+
+
+查看 Kafka 数据
+/usr/local/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:29092 --topic employee_salaries --from-beginning
+exit
+
+---------------------------------------------------------------------------
+
+运行 Kafka Consumer 并存入 PostgreSQL(PowerShell 运行):
+python consumer.py
+目的： 消费 Kafka 数据，并将 total_salary 存入 PostgreSQL
+ctrl + C
+
+---------------------------------------------------------------------------
+
+
+进入 PostgreSQL 并查询数据
+进入 PostgreSQL（在 PowerShell 运行）：
+docker exec -it kafka_setup-db-1 psql -U postgres
+
+切换到 postgres 数据库：
+\c postgres;
+
+查询 department_employee_salary 表
+SELECT * FROM department_employee_salary;
+\q
+
+---------------------------------------------------------------------------
+
+在 DBeaver 可视化 PostgreSQL
+
+打开DBeaver
+创建 PostgreSQL 连接
+点击 数据库 → 新建连接
+选择 PostgreSQL
+填写数据库连接信息：
+Host: 0.0.0.0
+Port: 5432
+Database: postgres
+User: postgres
+Password: postgres
+点击 测试连接 → 完成
+
+查询数据
+在左侧导航栏，展开 postgres 数据库
+找到 public 模式（Schema）
+右键 department_employee_salary 表
+选择 查看数据
+确认表中有 ECC、CIT、EMS 的 total_salary
+
+
+
+
+
