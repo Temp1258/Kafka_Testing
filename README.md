@@ -1,7 +1,9 @@
 # Kafka_Testing
-Kafka Practices including:  1. Kafka + Python + PostgreSQL streaming pipeline: reads CSV, streams to Kafka, stores in PostgreSQL (aggregated &amp; raw). 2. Real-time CDC pipeline using Kafka and Python: tracks PostgreSQL changes and syncs them to a target table via Kafka.
+Kafka Practices including:  
+1. Kafka + PostgreSQL Streaming Pipeline: reads CSV, streams to Kafka, stores in PostgreSQL (aggregated &amp; raw).
+2. Kafka + Python + PostgreSQL CDC Pipeline: tracks PostgreSQL changes and syncs them to a target table via Kafka.
 
-# Kafka + PostgreSQL Streaming Pipeline Project
+# Project 1: Kafka + PostgreSQL Streaming Pipeline Project
 
 This project demonstrates a complete data streaming pipeline using **Kafka**, **Python**, and **PostgreSQL**, from ingestion to processing and storage. It was developed as part of a Data Engineering hands-on assignment.
 
