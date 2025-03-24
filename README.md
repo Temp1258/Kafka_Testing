@@ -225,24 +225,6 @@ You should see records that reflect changes made in `employees`.
 
 ---
 
-## 📬 Contact
-Created by **[Your Name Here]**. For questions or feedback, feel free to open an issue.
-
-
-
-
-
-
-
-
-
-
-
-## ✍️ Author
-- Diwen Liu (Project by BeaconFire Training)
-
----
-
 ## 📄 License
 MIT License - feel free to reuse and adapt!
 
